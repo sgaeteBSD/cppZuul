@@ -1,0 +1,13 @@
+class Command {
+ private:
+    char* commandWord;
+    char* secondWord;
+ public:
+    Command(char* firstWord, char* secondWord)
+    virtual ~Command();
+    
+    char* getCommandWord();
+    char* getSecondWord();
+    bool isUnknown();
+    bool hasSecondWord();
+}
