@@ -8,7 +8,7 @@
 class Room {
  private:
   char* description;
-  map<char*, Room*> exits;
+  map<char*, Room*>;
   vector<Item*> items;
  public:
   Room(char* description);
