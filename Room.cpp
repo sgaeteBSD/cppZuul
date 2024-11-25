@@ -29,25 +29,116 @@ char* Room::getLongDescription() { //Get long desc
   //create base
   int baseLength = strlen("You are in ") + strlen(description) + (strlen(".\n") + 1; //find needed length
   char* result = new char[baseLength]; //create cstring
-  strcpy(result, "You are in ");
-  strcat(result, description);
+  strcpy(result, "You are in "); //copy first into result
+  strcat(result, description); //then append the others
   strcat(result, ".\n")
 
   //append exit string
   char* exitString = getExitString();
   int finalLength = baseLength + strlen(exitString) + 1;
   char* finalResult = new char[finalLength];
-  strcpy(finalResult, result);
-  strcpy(finalResult, exitString);
+  strcpy(finalResult, result); //copy first result into final
+  strcat(finalResult, exitString); //append exits
 
+  //clear up memory
   delete[] result;
   delete[] exitString;
-  return finalResult;								  //a
-								  }
+	
+  return finalResult; //return
+}
 
 char* Room::getExitString() {
-  char* returnString = "Exits:";
-  for (auto exit = exits.begin(); exit != exits.end();) {
-    //returnString
-  }
+    //start with "Exits:" 
+    int stringSize = strlen("Exits:") + 1;
+    char* result = new char[stringSize];
+    strcpy(result, "Exits:");
+
+    for (const auto& exit : exits) { //append possible exit directions
+        char* direction = exit.first;
+        int newSize = stringSize + strlen(" ") + strlen(direction);
+        char* temp = new char[newSize]; //cstring with new size
+        strcpy(temp, result); //copy in our existing result
+        strcat(temp, " "); //add a space
+        strcat(temp, direction); //add the direction option
+
+        delete[] result; //clear result
+        result = temp; //now result points to the temp memory
+        stringSize = newSize; //updates string size
+    }
+
+    //we also need to include room items. append those
+    char* roomItems = getRoomItems();
+    int finalSize = stringSize + strlen("\nItems in the room:\n") + strlen(roomItems); //new lines
+    char* finalResult = new char[finalSize]; //create cstring
+    strcpy(finalResult, result); //copy in
+    strcat(finalResult, "\nItems in the room:\n"); //append
+    strcat(finalResult, roomItems); //append
+
+    //clean up
+    delete[] result;
+    delete[] roomItems;
+    return finalResult;
+}
+
+Room* Room::getExit(char* direction) { //return room in specific direction
+    auto it = exits.find(direction); //use map's find()
+    if (it != exits.end()) {
+	//if the direction exists, return its room pointer
+	return it->second; //use it->second to get the map element's value (the room name) and not its key (the direction)
+    }
+    return nullptr; //if no room exists in given direction, return null
+}
+
+Item* Room::getItem(int index) {
+    if (index >= 0 && index < items.size()) { //if index exists in items vector
+        return items[index]; //return item at index
+    }
+    return nullptr; //if no match, return null
+}
+
+Item* Room::getItemN(char* itemName) {
+    for (auto item : items) {
+        if (strcmp(item->getDescription(), itemName) == 0) { //if description matches item name
+	    return item; //return matching item
+	}
+    }
+    return nullptr; //if no match, return null
+}
+
+void Room::removeItem(char* itemName) {
+    for (auto it = items.begin(); it != items.end(); ++it) { //go through items
+        if (strcmp((*it)->getDescription(), itemName) == 0) { //if desc matches item
+            delete *it; //free memory
+            items.erase(it); //remove from vector
+            return; //stop function/iteration
+        }
+    }
+}
+
+void Room::setItem(Item* newItem) {
+    //add given item to vector
+    items.push_back(newItem);
+}
+
+char* Room::getRoomItems() {
+    //create empty cstring
+    char* result = new char[1];
+    result[0] = '\0';
+
+    for (auto item : items) {
+        char* description = item->getDescription(); //get this item's description
+
+        //determine needed size
+        int newSize = strlen(result) + strlen(description) + strlen(" ") + 1;
+
+        //create temp for copying and appending
+        char* temp = new char[newSize];
+        strcpy(temp, result);       //copy in old
+        strcat(temp, description); //add item desc
+        strcat(temp, " ");         //add space
+
+        delete[] result; //free the old memory
+        result = temp;   //now result points to the temp memory
+    }
+    return result;
 }
