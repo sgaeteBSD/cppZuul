@@ -3,16 +3,16 @@
 
 class Command {
  private:
-    char* firstWord;
+    char* commandWord;
     char* secondWord;
  public:
-    Command(char* firstWord, char* secondWord)
+  Command(char* commandWord, char* secondWord);
     virtual ~Command();
     
-    char* getFirstWord();
+    char* getCommandWord();
     char* getSecondWord();
     bool isUnknown();
     bool hasSecondWord();
-}
+};
 
 #endif

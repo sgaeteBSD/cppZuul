@@ -7,7 +7,7 @@ class Item {
  private:
   char* description;
  public:
-  Item(char* description);
+  Item(const char* description);
   virtual ~Item();
   char* getDescription();
 };

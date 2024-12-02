@@ -1,33 +1,31 @@
+#include "Command.h"
+#include <cstring>
 
-class Command {
-  Command::Command(char* firstWord, char* secondWord) {
-    this->firstWord = new char[strlen(firstWord) + 1]; //convert to cstring of needed size
-    strcpy(this->firstWord, firstWord); //copy the passed in first word to our object
+  Command::Command(char* commandWord, char* secondWord) {
+    this->commandWord = new char[strlen(commandWord) + 1]; //convert to cstring of needed size
+    strcpy(this->commandWord, commandWord); //copy the passed in first word to our object
     this->secondWord = new char[strlen(secondWord) + 1];
     strcpy(this->secondWord, secondWord);
-
-    commandWord = firstWord;
   }
 
   Command::~Command() { //destructor
-    delete[] firstWord;
+    delete[] commandWord;
     delete[] secondWord;
   }
 
-  char* getFirstWord() {
-    return firstWord;
+char* Command::getCommandWord() {
+    return commandWord;
   }
 
-  char* getSecondWord() {
+char* Command::getSecondWord() {
     return secondWord;
   }
 
-  bool isUnknown() { //true if command is null
-    return (firstWord == null);
+bool Command::isUnknown() { //true if command is null
+    return (commandWord == nullptr);
   }
 
-  bool hasSecondWord() { //true if there is a second word
-    return (secondWord != null);
+bool Command::hasSecondWord() { //true if there is a second word
+    return (secondWord != nullptr);
   }
-}
 

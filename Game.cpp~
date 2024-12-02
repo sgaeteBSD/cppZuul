@@ -1,0 +1,287 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include "Parser.h"
+#include "Room.h"
+#include "Item.h"
+#include "Command.h"
+
+using namespace std;
+
+class Game {
+private:
+    Parser parser;
+    Room* currentRoom;
+    int coffeeCheck;
+    Room *boss, *cubicles1, *conference, *break1, *reception, *bridge, *lobby, *cubicles2, *vending, *office, *empty, *IT, *storage, *kitchen, *break2;
+    vector<Item> inventory;
+
+public:
+    Game() {
+        createRooms();
+    }
+
+    void createRooms() {
+        // Create rooms
+        boss = new Room("in your boss' office");
+        cubicles1 = new Room("in an average sea of cubicles. Exciting");
+        conference = new Room("in a conference room. There's a meeting going on, so you should probably leave");
+        break1 = new Room("in a break room. You usually use the coffee machine here, but it's broken. There's another one further north");
+        reception = new Room("near the receptionist's desk. There's a can of ground espresso on the counter");
+        bridge = new Room("on a bridge between rooms. For whatever reason, there's a frother on the ground");
+        lobby = new Room("in the lobby. Leaving through the front door is tempting, but there's work to be done");
+        cubicles2 = new Room("in just another room of cubicles. Just as exciting as last time");
+        vending = new Room("in an elevator room, with some vending machines. There's water bottles in the machine");
+        office = new Room("in a random office. The boss here is out, and there's a really nice mug on his desk");
+        empty = new Room("in a completely empty room. Still better than the cubicles");
+        IT = new Room("in the IT department's office. Maybe someone here can fix that south coffee machine later");
+        storage = new Room("in the storage room. Surprisingly, there's nothing useful");
+        kitchen = new Room("in the kitchen. There's milk in the fridge");
+        break2 = new Room("in the north break room, with a working coffee machine. Use the command \"brew\" to use the machine");
+
+        // Initialize room exits (using strings for directions)
+        boss->setExit("north", cubicles1);
+
+        cubicles1->setExit("south", boss);
+        cubicles1->setExit("west", break1);
+        cubicles1->setExit("east", conference);
+
+        break1->setExit("east", cubicles1);
+        break1->setExit("north", reception);
+
+        conference->setExit("west", cubicles1);
+        conference->setExit("north", bridge);
+
+        reception->setExit("south", break1);
+        reception->setExit("north", lobby);
+
+        bridge->setExit("south", conference);
+        bridge->setExit("north", cubicles2);
+
+        lobby->setExit("south", reception);
+        lobby->setExit("east", vending);
+
+        cubicles2->setExit("south", bridge);
+        cubicles2->setExit("west", vending);
+        cubicles2->setExit("east", office);
+
+        vending->setExit("west", lobby);
+        vending->setExit("north", IT);
+        vending->setExit("east", cubicles2);
+
+        IT->setExit("south", vending);
+        IT->setExit("north", kitchen);
+
+        office->setExit("west", cubicles2);
+        office->setExit("north", empty);
+
+        empty->setExit("south", office);
+        empty->setExit("north", storage);
+
+        kitchen->setExit("south", IT);
+        kitchen->setExit("east", break2);
+
+        storage->setExit("south", empty);
+        storage->setExit("west", break2);
+
+        break2->setExit("west", kitchen);
+        break2->setExit("east", storage);
+
+        // Initialize items
+        reception->setItem(new Item("espresso"));
+        bridge->setItem(new Item("frother"));
+        vending->setItem(new Item("water"));
+        office->setItem(new Item("mug"));
+        kitchen->setItem(new Item("milk"));
+
+        currentRoom = boss;  // Start game at boss
+    }
+
+    void printWelcome() {
+        cout << "\nWelcome to Adventure!" << endl;
+        cout << "Adventure is a new, incredibly boring adventure game." << endl;
+        cout << "Type 'help' if you need help." << endl;
+        cout << "\nYour boss wants a cup of coffee. Find the five ingredients and a coffee machine, then bring the finished latte back." << endl;
+        cout << "\n" << currentRoom->getLongDescription() << endl;
+    }
+
+    void play() {
+        printWelcome();
+
+        bool finished = false;
+        while (!finished) {
+            Command* command = parser.getCommand();
+            finished = processCommand(command);
+        }
+        cout << "Thank you for playing. Goodbye." << endl;
+    }
+
+    bool processCommand(Command* command) {
+        bool wantToQuit = false;
+
+        if (command->isUnknown()) {
+            cout << "I don't know what you mean..." << endl;
+            return false;
+        }
+
+        string commandWord = command->getCommandWord();
+        if (commandWord == "help") {
+            printHelp();
+        }
+        else if (commandWord == "go") {
+            wantToQuit = goRoom(command);
+        }
+        else if (commandWord == "quit") {
+            wantToQuit = quit(command);
+        }
+        else if (commandWord == "inventory") {
+            printInventory();
+        }
+        else if (commandWord == "get") {
+            getItem(command);
+        }
+        else if (commandWord == "drop") {
+            dropItem(command);
+        }
+        else if (commandWord == "brew") {
+            brewCoffee();
+        }
+        return wantToQuit;
+    }
+
+    void brewCoffee() {
+        if (currentRoom == break2) {  // If there's a coffee machine
+            for (size_t i = 0; i < 5; ++i) {
+                try {
+		  if (!inventory[i].getDescription() != '\0') {
+                        coffeeCheck += 1;
+                    }
+                }
+                catch (...) {  // Try-catch in case of missing ingredients
+                    cout << "You're missing ingredients!" << endl;
+                    coffeeCheck = 0;
+                    break;
+                }
+            }
+
+            if (coffeeCheck == 5) {  // Check if all 5 ingredients are present
+                inventory.clear();  // Remove all 5 now
+                inventory.push_back(Item("coffee"));  // Add coffee
+                cout << "You've brewed the coffee! Bring it back to your boss." << endl;
+            }
+        }
+        else if (currentRoom == break1) {
+            cout << "The coffee machine here is broken. Too bad." << endl;
+        }
+        else {
+            cout << "There's no coffee machine here!" << endl;
+        }
+    }
+
+    void dropItem(Command* command) {
+        if (!command->hasSecondWord()) {
+            cout << "Drop what?" << endl;
+            return;
+        }
+
+        char* item = command->getSecondWord();
+
+        // Try to drop the requested item.
+        Item* newItem = nullptr;
+        size_t index = 0;
+        for (size_t i = 0; i < inventory.size(); ++i) {
+            if (inventory[i].getDescription() == item) {
+                newItem = &inventory[i];
+                index = i;
+                break;
+            }
+        }
+
+        if (newItem == nullptr) {
+            cout << "That item is not in your inventory!" << endl;
+        }
+        else {
+            inventory.erase(inventory.begin() + index);
+            currentRoom->setItem(newItem);
+            cout << "Dropped: " << item << endl;
+        }
+    }
+
+    void getItem(Command* command) {
+        if (!command->hasSecondWord()) {
+            cout << "Get what?" << endl;
+            return;
+        }
+
+        char* item = command->getSecondWord();
+
+        Item* newItem = currentRoom->getItem(item);
+
+        if (newItem == nullptr) {
+            cout << "That item is not here!" << endl;
+        }
+        else {
+            inventory.push_back(*newItem);
+            currentRoom->removeItem(item);
+            cout << "Picked up: " << item << endl;
+        }
+    }
+
+    void printInventory() {
+        char output[80] = "";
+        for (size_t i = 0; i < inventory.size(); ++i) {
+            strcat(output, inventory[i].getDescription());
+            strcat(output, " ");
+        }
+
+        cout << "You are carrying:" << endl;
+        cout << output << endl;
+    }
+
+    void printHelp() {
+        cout << "You need to find five coffee ingredients and brew a latte for your boss at the northern coffee machine," << endl;
+        cout << "and bring it back to their office once you're done." << endl;
+        cout << "\nYour command words are:" << endl;
+        parser.showCommands();
+    }
+
+    bool goRoom(Command* command) {
+        if (!command->hasSecondWord()) {
+            cout << "Go where?" << endl;
+            return false;
+        }
+
+        char* direction = command->getSecondWord();
+
+        Room* nextRoom = currentRoom->getExit(direction);
+
+        if (nextRoom == nullptr)
+            cout << "There is no door!" << endl;
+        else {
+            currentRoom = nextRoom;
+            cout << currentRoom->getLongDescription() << endl;
+            // Win condition(s)! Step into boss' room with coffee in inventory
+            if (currentRoom == boss && inventory[0].getDescription() == "coffee") {
+                cout << "You win! Your boss is very thankful. Now get back to work!" << endl;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool quit(Command* command) {
+        if (command->hasSecondWord()) {
+            cout << "Quit what?" << endl;
+            return false;
+        }
+        else
+            return true;  // signal that we want to quit
+    }
+};
+
+// Main function to start the game
+int main() {
+    Game mygame;
+    mygame.play();
+    return 0;
+}
