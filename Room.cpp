@@ -81,11 +81,17 @@ char* Room::getExitString() {
 }
 
 Room* Room::getExit(char* direction) { //return room in specific direction
-    auto it = exits.find(direction); //use map's find()
+    for (const auto& pair : exits) {
+        if (strcmp(pair.first, direction) == 0) {
+            return pair.second; // Found matching key
+        }
+    }
+
+  /*auto it = exits.find(direction); //use map's find()
     if (it != exits.end()) {
 	//if the direction exists, return its room pointer
 	return it->second; //use it->second to get the map element's value (the room name) and not its key (the direction)
-    }
+    }*/
     return nullptr; //if no room exists in given direction, return null
 }
 
@@ -101,11 +107,13 @@ Item* Room::getItem(const char* itemName) {
 void Room::removeItem(const char* itemName) {
     for (auto it = items.begin(); it != items.end(); ++it) { //go through items
         if (strcmp((*it)->getDescription(), itemName) == 0) { //if desc matches item
-            delete *it; //free memory
-            items.erase(it); //remove from vector
-            return; //stop function/iteration
+            delete *it; //free memory of the item
+            items.erase(it); //remove the item from the vector
+            cout << "Removed item: " << itemName << endl;
+            return; //stop function/iteration after removal
         }
     }
+    cout << "Item not found: " << itemName << endl; //if item isn't found
 }
 
 void Room::setItem(Item* newItem) {

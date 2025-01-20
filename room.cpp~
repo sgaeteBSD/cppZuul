@@ -2,7 +2,7 @@
 #include <cstring>
 #include <iostream>
 
-Room::Room(char* description) { //Constructor
+Room::Room(const char* description) { //Constructor
   this->description = new char[strlen(description) + 1];
   strcpy(this->description, description);
 }
@@ -15,7 +15,7 @@ Room::~Room() { //Destructor
   }
 }
 
-void Room::setExit(char* direction, Room* neighbor) { //Set exit to neighbor
+void Room::setExit(const char* direction, Room* neighbor) { //Set exit to neighbor
   exits[direction] = neighbor;
 }
 
@@ -27,7 +27,7 @@ char* Room::getShortDescription() { //Get short desc
 
 char* Room::getLongDescription() { //Get long desc
   //create base
-  int baseLength = strlen("You are ") + strlen(description) + (strlen(".\n") + 1; //find needed length
+  int baseLength = strlen("You are ") + strlen(description) + strlen(".\n") + 1; //find needed length
   char* result = new char[baseLength]; //create cstring
   strcpy(result, "You are "); //copy first into result
   strcat(result, description); //then append the others
@@ -54,7 +54,7 @@ char* Room::getExitString() {
     strcpy(result, "Exits:");
 
     for (const auto& exit : exits) { //append possible exit directions
-        char* direction = exit.first;
+        const char* direction = exit.first;
         int newSize = stringSize + strlen(" ") + strlen(direction);
         char* temp = new char[newSize]; //cstring with new size
         strcpy(temp, result); //copy in our existing result
@@ -81,11 +81,17 @@ char* Room::getExitString() {
 }
 
 Room* Room::getExit(char* direction) { //return room in specific direction
-    auto it = exits.find(direction); //use map's find()
+    for (const auto& pair : exits) {
+        if (strcmp(pair.first, direction) == 0) {
+            return pair.second; // Found matching key
+        }
+    }
+
+  /*auto it = exits.find(direction); //use map's find()
     if (it != exits.end()) {
 	//if the direction exists, return its room pointer
 	return it->second; //use it->second to get the map element's value (the room name) and not its key (the direction)
-    }
+    }*/
     return nullptr; //if no room exists in given direction, return null
 }
 
@@ -94,16 +100,8 @@ Item* Room::getItem(const char* itemName) {
     if (strcmp(item->getDescription(), itemName) == 0) {
       return item;
     }
-    return nullptr; //if no match, return null
-}
-
-Item* Room::getItemN(char* itemName) {
-    for (auto item : items) {
-        if (strcmp(item->getDescription(), itemName) == 0) { //if description matches item name
-	    return item; //return matching item
-	}
-    }
-    return nullptr; //if no match, return null
+  }
+  return nullptr; //if no match, return null
 }
 
 void Room::removeItem(const char* itemName) {
